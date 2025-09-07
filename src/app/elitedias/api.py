@@ -4,11 +4,18 @@ import json
 
 from typing import Final
 
+from datetime import datetime, timedelta
+
 from app import config
 from app.shared.paths import SRC_PATH
+from app.shared.cache_store import ModelKeyValueStore, CacheData
 
 
-from .models import AvailableGameResponse, ElitediasGameFields, ElitediasGameFieldsInfo
+from .models import (
+    AvailableGameResponse,
+    ElitediasGameFields,
+    ElitediasGameFieldsInfo,
+)
 from . import logger
 
 ELITEDIAS_BASE_URL: Final[str] = "https://dev.api.elitedias.com"
@@ -43,7 +50,17 @@ class ElitediasAPIClient:
 
             return AvailableGameResponse.model_validate(res.json())
 
-    async def get_denominations(self, game: str) -> dict[str, str]:
+    async def get_denominations(self, game: str) -> dict[str, float]:
+        store = ModelKeyValueStore(
+            "denominations",
+            SRC_PATH / "data" / "store",
+            CacheData[dict[str, float]],
+        )
+
+        cached_data = store.get(game)
+        if cached_data and cached_data.is_valid():
+            return cached_data.data
+
         async with httpx.AsyncClient(headers=self.headers) as client:
             res = await client.post(
                 f"{self.base_url}/elitedias_api_denominations",
@@ -59,7 +76,17 @@ class ElitediasAPIClient:
                 logger.info(res.text)
                 res.raise_for_status()
 
-            return res.json()
+            response_data = res.json()
+
+            cached_data = CacheData[dict[str, float]].model_validate(
+                {
+                    "date": datetime.now(),
+                    "valid": timedelta(days=config.CACHE_VALID),
+                    "data": response_data,
+                }
+            )
+            store.set(game, cached_data)
+            return response_data
 
     async def get_elitedias_game_fields(self, game: str) -> ElitediasGameFields:
         cached_data = {}

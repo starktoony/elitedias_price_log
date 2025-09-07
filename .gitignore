@@ -29,3 +29,7 @@ data/*
 # Data
 user_dir/*
 !user_dir/.gitkeep
+
+# Data store
+**/data/store/*
+!**/data/store/.gitkeep

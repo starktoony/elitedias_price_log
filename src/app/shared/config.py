@@ -35,6 +35,9 @@ class Config(BaseModel):
     # Origin
     ORIGIN: str = "sosanhsach.io"
 
+    # Cache valid duration
+    CACHE_VALID: int = 7  # days
+
     @staticmethod
     def from_env(dotenv_path: str = "settings.env") -> "Config":
         load_dotenv(dotenv_path)
