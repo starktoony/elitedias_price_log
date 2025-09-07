@@ -2,6 +2,7 @@ import asyncio
 
 
 from datetime import datetime
+from httpx import HTTPStatusError
 
 from .elitedias.api import elitedias_api_client
 from .elitedias.models import FriElidiasGame, ElitediasGameFields
@@ -132,11 +133,14 @@ async def get_game_dict() -> dict[str, FriElidiasGame]:
     games: list[str] = (await elitedias_api_client.get_available_games()).games
 
     logger.info("## Getting denominations")
-    __tasks = []
+    denominations = []
     for game in games:
-        __tasks.append(elitedias_api_client.get_denominations(game))
-
-    denominations = await asyncio.gather(*__tasks)
+        try:
+            game_denominations = await elitedias_api_client.get_denominations(game)
+            denominations.append(game_denominations)
+        except HTTPStatusError as e:
+            logger.error(f"Error getting denominations for {game}: {e}")
+            denominations.append({})
 
     logger.info("## Getting game fields")
     __tasks = []
