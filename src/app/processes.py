@@ -135,6 +135,7 @@ async def get_game_dict() -> dict[str, FriElidiasGame]:
     logger.info("## Getting denominations")
     denominations = []
     for game in games:
+        logger.info(f"Getting denominations for {game}")
         try:
             game_denominations = await elitedias_api_client.get_denominations(game)
             denominations.append(game_denominations)
