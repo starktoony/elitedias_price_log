@@ -36,7 +36,7 @@ class Config(BaseModel):
     ORIGIN: str = "sosanhsach.io"
 
     # Cache valid duration
-    CACHE_VALID: int = 7  # days
+    CACHE_VALID: int = 1  # days
 
     @staticmethod
     def from_env(dotenv_path: str = "settings.env") -> "Config":
