@@ -106,6 +106,8 @@ def batch_update_price(
 
     update_cell_mapping = find_cell_to_update(to_be_updated_row_models)
 
+    logger.info(f"Found cell to update: {update_cell_mapping}")
+
     for row_model in to_be_updated_row_models:
         if row_model.ID_SHEET and row_model.SHEET and row_model.COL_NOTE:
             if row_model.ID_SHEET not in update_dict:
