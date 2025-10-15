@@ -487,10 +487,22 @@ class RowModel(ColSheetModel):
             COL_META: "M",
         },
     ] = None
-    CELL: Annotated[
+    COL_NOTE: Annotated[
         str | None,
         {
             COL_META: "N",
+        },
+    ] = None
+    CODE: Annotated[
+        str | None,
+        {
+            COL_META: "O",
+        },
+    ] = None
+    COL_CODE: Annotated[
+        str | None,
+        {
+            COL_META: "P",
         },
     ] = None
 
