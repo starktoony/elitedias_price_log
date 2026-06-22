@@ -3,7 +3,7 @@ from pydantic import BaseModel
 
 class AvailableGameResponse(BaseModel):
     code: str
-    games: list[str]
+    data: dict[str, str]
 
 
 class ElitediasGameFieldsInfo(BaseModel):

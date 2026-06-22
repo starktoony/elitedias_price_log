@@ -209,7 +209,7 @@ async def get_game_dict() -> dict[str, FriElidiasGame]:
     game_dict: dict[str, FriElidiasGame] = {}
 
     logger.info("## Getting game")
-    games: list[str] = (await elitedias_api_client.get_available_games()).games
+    games: list[str] = list((await elitedias_api_client.get_available_games()).data.keys())
 
     logger.info("## Getting denominations")
     denominations = []
