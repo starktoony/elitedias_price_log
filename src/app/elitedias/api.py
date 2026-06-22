@@ -26,7 +26,7 @@ async def _post_with_backoff(
         res = await client.post(url, **kwargs)
         if res.status_code != 429:
             return res
-        wait = delay * (2 ** attempt)
+        wait = delay * (2**attempt)
         logger.warning(f"Rate limited (429) on {url}, retrying in {wait:.1f}s")
         await asyncio.sleep(wait)
     return res
@@ -73,6 +73,9 @@ class ElitediasAPIClient:
             return res.json()
 
     async def get_elitedias_game_fields(self, game: str) -> ElitediasGameFields:
+        _empty = ElitediasGameFields(
+            code="200", info=ElitediasGameFieldsInfo(fields=[], notes="")
+        )
         cached_data = {}
         with open(SRC_PATH / "data" / "game_notes.json") as f:
             cached_data = json.load(f)
@@ -81,25 +84,22 @@ class ElitediasAPIClient:
                     code="200",
                     info=ElitediasGameFieldsInfo(fields=[], notes=cached_data[game]),
                 )
-        async with httpx.AsyncClient(headers=self.headers) as client:
-            res = await client.post(
-                f"{self.base_url}/elitedias_game_fields",
-                json={"api_key": config.ALITEDIAS_API_KEY, "game": game},
-                timeout=60,
-            )
-            try:
+        try:
+            async with httpx.AsyncClient(headers=self.headers) as client:
+                res = await client.post(
+                    f"{self.base_url}/elitedias_game_fields",
+                    json={"api_key": config.ALITEDIAS_API_KEY, "game": game},
+                    timeout=60,
+                )
                 res.raise_for_status()
-            except httpx.HTTPStatusError as e:
-                logger.exception(e)
-                logger.info(res.text)
-                raise
-
-            model_response = ElitediasGameFields.model_validate(res.json())
-            cached_data[game] = model_response.info.notes
-            with open(SRC_PATH / "data" / "game_notes.json", "w") as f:
-                json.dump(cached_data, f, indent=4)
-
-            return model_response
+                model_response = ElitediasGameFields.model_validate(res.json())
+                cached_data[game] = model_response.info.notes
+                with open(SRC_PATH / "data" / "game_notes.json", "w") as f:
+                    json.dump(cached_data, f, indent=4)
+                return model_response
+        except Exception as e:
+            logger.error(f"Failed to fetch game fields for {game}: {e}")
+            return _empty
 
 
 elitedias_api_client = ElitediasAPIClient()

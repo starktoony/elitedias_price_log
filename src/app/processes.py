@@ -209,7 +209,9 @@ async def get_game_dict() -> dict[str, FriElidiasGame]:
     game_dict: dict[str, FriElidiasGame] = {}
 
     logger.info("## Getting game")
-    games: list[str] = list((await elitedias_api_client.get_available_games()).info.keys())
+    games: list[str] = list(
+        (await elitedias_api_client.get_available_games()).info.keys()
+    )
 
     logger.info("## Getting denominations")
     denominations = []
@@ -227,12 +229,14 @@ async def get_game_dict() -> dict[str, FriElidiasGame]:
     for game in games:
         __tasks.append(elitedias_api_client.get_elitedias_game_fields(game))
 
-    game_fields_responses: list[ElitediasGameFields] = await asyncio.gather(*__tasks)
+    game_fields_responses = await asyncio.gather(*__tasks, return_exceptions=True)
 
     for i, game in enumerate(games):
+        response = game_fields_responses[i]
+        notes = response.info.notes if isinstance(response, ElitediasGameFields) else ""
         game_dict[game] = FriElidiasGame(
             game=game,
-            notes=game_fields_responses[i].info.notes,
+            notes=notes,
             denominations=denominations[i],
         )
 
